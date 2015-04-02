@@ -36,7 +36,6 @@ module RailsAdmin
                 format.js   { render @action.template_name, :layout => false }
               end
             elsif request.post?
-              satisfy_strong_params!
               sanitize_params_for!(request.xhr? ? :model : :create)
 
               @object = @abstract_model.model.invite!(params[@abstract_model.to_param], _current_user)
