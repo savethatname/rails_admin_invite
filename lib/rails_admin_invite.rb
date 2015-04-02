@@ -22,6 +22,7 @@ module RailsAdmin
         end
 
         register_instance_option :controller do
+          
           Proc.new do
             if request.get?
               @object = @abstract_model.new
@@ -37,16 +38,21 @@ module RailsAdmin
               end
             elsif request.post?
               sanitize_params_for!(request.xhr? ? :model : :create)
-
-              @object = @abstract_model.model.invite!(params[@abstract_model.to_param], _current_user)
+              
+              model_name = @abstract_model.model_name.underscore.gsub!('/', '_')
+              
+              @object = @abstract_model.model.invite!({email: params[model_name][:email]}, _current_user)
               if @object.errors.empty?
                 notice = I18n.t("admin.actions.invite.sent", email: @object.email)
-                if params[:return_to]
+                if params[:return_to] && params[:return_to] != ''
+                  Rails.logger.debug "Redirecting to return_to: #{params[:return_to]}"
                   redirect_to(params[:return_to], notice: notice)
                 else
+                  Rails.logger.debug "Redirecting to #{invite_path(:model_name => @abstract_model.to_param)}"
                   redirect_to(invite_path(:model_name => @abstract_model.to_param), notice: notice)
                 end
               else
+                Rails.logger.debug "ERROR SAVING INVITE"
                 handle_save_error :whereto => :invite
               end
             end
@@ -56,4 +62,3 @@ module RailsAdmin
     end
   end
 end
-
